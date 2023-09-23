@@ -43,7 +43,6 @@ namespace SmartVault.DataGeneration
 
                 }
 
-                var documentNumber = 0;
                 using (var transaction = connection.BeginTransaction())
                 {
                     Parallel.ForEach(Enumerable.Range(0, 100), i =>
@@ -55,8 +54,7 @@ namespace SmartVault.DataGeneration
                         for (int d = 0; d < 10000; d++)
                         {
                             var documentPath = new FileInfo("TestDoc.txt").FullName;
-                            var documentId = Interlocked.Increment(ref documentNumber);
-                            connection.Execute($"INSERT INTO Document (Id, Name, FilePath, Length, AccountId) VALUES('{documentId}','Document{i}-{d}.txt','{documentPath}','{new FileInfo(documentPath).Length}','{i}')", transaction: transaction);
+                            connection.Execute($"INSERT INTO Document (Name, FilePath, Length, AccountId) VALUES('Document{i}-{d}.txt','{documentPath}','{new FileInfo(documentPath).Length}','{i}')", transaction: transaction);
 
                         }
                     });
