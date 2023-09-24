@@ -1,14 +1,15 @@
 ﻿using Dapper;
 using Microsoft.Extensions.Configuration;
+using SmartVault.BusinessLogic.Interfaces;
 using SmartVault.Library;
 using System;
 using System.Data.SQLite;
 using System.IO;
 using System.Xml.Serialization;
 
-namespace SmartVault.BusinessLogic
+namespace SmartVault.BusinessLogic.Services
 {
-    public class DatabaseHelper
+    public class DatabaseService : IDatabaseService
     {
         private readonly IConfigurationRoot _configuration = new ConfigurationBuilder()
                 .SetBasePath(Directory.GetCurrentDirectory())

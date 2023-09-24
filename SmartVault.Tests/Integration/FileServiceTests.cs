@@ -1,19 +1,20 @@
 ﻿using NSubstitute;
+using SmartVault.BusinessLogic.Interfaces;
+using SmartVault.BusinessLogic.Services;
 using System.IO.Abstractions;
 using Xunit;
-using FileHelper = SmartVault.BusinessLogic.FileHelper;
 
-namespace SmartVault.Tests.Unit
+namespace SmartVault.Tests.Integration
 {
-    public class FileHelperTests : DataFixture
+    public class FileServiceTests : DataFixture
     {
         private readonly IFileSystem _mock = Substitute.For<IFileSystem>();
         private readonly IFileInfo _fileInfo = Substitute.For<IFileInfo>();
-        private readonly FileHelper _fileHelper;
+        private readonly IFileService _fileService;
 
-        public FileHelperTests()
+        public FileServiceTests()
         {
-            _fileHelper = new FileHelper(_mock);
+            _fileService = new FileService(_mock);
         }
 
         [Fact]
@@ -27,7 +28,7 @@ namespace SmartVault.Tests.Unit
 
             //Act
             _mock.ClearReceivedCalls();
-            var result = _fileHelper.VerifyIfFileExists(filename);
+            var result = _fileService.VerifyIfFileExists(filename);
 
             //Assert
             Assert.True(result);
@@ -44,7 +45,7 @@ namespace SmartVault.Tests.Unit
 
             //Act
             _mock.ClearReceivedCalls();
-            var result = _fileHelper.VerifyIfFileExists(filename);
+            var result = _fileService.VerifyIfFileExists(filename);
 
             //Assert
             Assert.False(result);
@@ -65,7 +66,7 @@ namespace SmartVault.Tests.Unit
 
             //Act
             _mock.ClearReceivedCalls();
-            var result = _fileHelper.GetFileSize(filename);
+            var result = _fileService.GetFileSize(filename);
 
             //Assert
             Assert.Equal(length, result);
@@ -83,7 +84,7 @@ namespace SmartVault.Tests.Unit
 
             //Act
             _mock.ClearReceivedCalls();
-            var result = _fileHelper.GetFileSize(filename);
+            var result = _fileService.GetFileSize(filename);
 
             //Assert
             Assert.Equal(0, result);
@@ -107,7 +108,7 @@ namespace SmartVault.Tests.Unit
 
             //Act
             _mock.ClearReceivedCalls();
-            var result = _fileHelper.GetFileInfo(filename);
+            var result = _fileService.GetFileInfo(filename);
 
             //Assert
             Assert.Equal(length, result.Length);
@@ -128,7 +129,7 @@ namespace SmartVault.Tests.Unit
 
             //Act
             _mock.ClearReceivedCalls();
-            _fileHelper.CreateFile(filename, content);
+            _fileService.CreateFile(filename, content);
 
             //Assert
             _mock.Received(1).File.WriteAllText(filename, content);
@@ -146,7 +147,7 @@ namespace SmartVault.Tests.Unit
 
             //Act
             _mock.ClearReceivedCalls();
-            string result = _fileHelper.CheckStringInFile(filename, textToSearch);
+            string result = _fileService.CheckStringInFile(filename, textToSearch);
 
             //Assert
             Assert.Equal(content, result);
@@ -165,7 +166,7 @@ namespace SmartVault.Tests.Unit
 
             //Act
             _mock.ClearReceivedCalls();
-            string result = _fileHelper.CheckStringInFile(filename, textToSearch);
+            string result = _fileService.CheckStringInFile(filename, textToSearch);
 
             //Assert
             Assert.Equal(string.Empty, result);

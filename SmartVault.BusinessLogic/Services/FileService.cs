@@ -1,18 +1,19 @@
-﻿using System;
+﻿using SmartVault.BusinessLogic.Interfaces;
+using System;
 using System.IO;
 using System.IO.Abstractions;
 
-namespace SmartVault.BusinessLogic
+namespace SmartVault.BusinessLogic.Services
 {
-    public class FileHelper
+    public class FileService : IFileService
     {
         private readonly IFileSystem _fileSystem;
 
         private readonly string _directory = Path.GetFullPath(Directory.GetParent(Environment.CurrentDirectory).Parent.Parent.FullName + "\\..\\");
 
-        public FileHelper() : this(new FileSystem()) { }
+        public FileService() : this(new FileSystem()) { }
 
-        public FileHelper(IFileSystem fileSystem)
+        public FileService(IFileSystem fileSystem)
         {
             _fileSystem = fileSystem;
         }
@@ -30,7 +31,7 @@ namespace SmartVault.BusinessLogic
         public string CheckStringInFile(string path, string textToSearch)
         {
             string fileContent = _fileSystem.File.ReadAllText(path);
-            //Melhorar
+
             if (fileContent.Contains(textToSearch))
             {
                 return fileContent;

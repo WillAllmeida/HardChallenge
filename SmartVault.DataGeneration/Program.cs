@@ -1,9 +1,9 @@
-﻿using SmartVault.BusinessLogic;
-using SmartVault.BusinessLogic.Interfaces;
+﻿using SmartVault.BusinessLogic.Interfaces;
 using SmartVault.BusinessLogic.Repositories;
+using SmartVault.BusinessLogic.Services;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -14,66 +14,70 @@ namespace SmartVault.DataGeneration
     {
         static Random _random = new Random();
         static DateTime _start = new DateTime(1985, 1, 1);
-        static DatabaseHelper _databaseHelper = new DatabaseHelper();
-        static FileHelper _fileHelper = new FileHelper();
         static string _fileName = "TestDoc.txt";
-        static IDocumentRepository _documentRepository = new DocumentRepository();
-        static IAccountRepository _accountRepository = new AccountRepository();
-        static IUserRepository _userRepository = new UserRepository();
+
+        static SQLiteConnection _connection = null!;
+        static IDocumentRepository _documentRepository = null!;
+        static IAccountRepository _accountRepository = null!;
+        static IUserRepository _userRepository = null!;
+        static IOAuthUserRepository _oauthUserRepository = null!;
+        static IDatabaseService _databaseService = new DatabaseService();
+        static IFileService _fileService = new FileService();
 
         static void Main(string[] args)
         {
-            if (_fileHelper.VerifyIfFileExists(_databaseHelper.GetDatabaseName()))
+            if (_fileService.VerifyIfFileExists(_databaseService.GetDatabaseName()))
             {
                 Console.WriteLine("The database already exists.");
                 return;
             }
 
-            _databaseHelper.CreateDatabaseFile();
-            _fileHelper.CreateFile(_fileName, $"This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}");
+            _databaseService.CreateDatabaseFile();
+            _fileService.CreateFile(_fileName, $"This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}");
 
-            using (var connection = _databaseHelper.GetDatabaseConnection())
+            using (_connection = _databaseService.GetDatabaseConnection())
             {
-                Stopwatch stopWatch = new Stopwatch();
-                stopWatch.Start();
-                connection.Open();
-                var files = Directory.GetFiles(@"..\..\..\..\BusinessObjectSchema");
+                _connection.Open();
+                InitializeRepositories();
 
-                _databaseHelper.CreateDatabaseTables(connection, files);
+                var files = Directory.GetFiles(Path.Join("..", "..", "..", "..", "BusinessObjectSchema"));
 
-                using (var transaction = connection.BeginTransaction())
+                _databaseService.CreateDatabaseTables(_connection, files);
+
+                using (var transaction = _connection.BeginTransaction())
                 {
-                    Parallel.ForEach(Enumerable.Range(0, 100), i =>
+                    Parallel.ForEach(Enumerable.Range(0, 100), new ParallelOptions { MaxDegreeOfParallelism = Environment.ProcessorCount }, i =>
                     {
                         var randomDayIterator = RandomDay().GetEnumerator();
                         randomDayIterator.MoveNext();
                         string currentDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
 
-                        _userRepository.InsertUser(connection, transaction, i, randomDayIterator.Current.ToString("yyyy-MM-dd"), currentDate);
-                        _accountRepository.InsertAccount(connection, transaction, i, currentDate);
+                        _userRepository.InsertUser(transaction, i, randomDayIterator.Current.ToString("yyyy-MM-dd"), currentDate);
+                        _accountRepository.InsertAccount(transaction, i, currentDate);
 
                         for (int d = 0; d < 10000; d++)
                         {
-                            _documentRepository.InsertDocument(connection, transaction, i, d, _fileHelper.GetFileInfo(_fileName), currentDate);
+                            _documentRepository.InsertDocument(transaction, i, d, _fileService.GetFileInfo(_fileName), currentDate);
 
                         }
                     });
                     transaction.Commit();
                 }
-                TimeSpan ts = stopWatch.Elapsed;
 
-                // Format and display the TimeSpan value.
-                string elapsedTime = String.Format("{0:00}:{1:00}:{2:00}.{3:00}",
-                    ts.Hours, ts.Minutes, ts.Seconds,
-                    ts.Milliseconds / 10);
-                Console.WriteLine("RunTime " + elapsedTime);
-
-                Console.WriteLine($"AccountCount: {_accountRepository.GetAccountCount(connection)}");
-                Console.WriteLine($"DocumentCount: {_documentRepository.GetDocumentCount(connection)}");
-                Console.WriteLine($"UserCount: {_userRepository.GetUserCount(connection)}");
+                Console.WriteLine($"AccountCount: {_accountRepository.GetAccountCount()}");
+                Console.WriteLine($"DocumentCount: {_documentRepository.GetDocumentCount()}");
+                Console.WriteLine($"UserCount: {_userRepository.GetUserCount()}");
+                Console.WriteLine($"OAuthUserCount: {_oauthUserRepository.GetOAuthUserCount()}");
             }
         }
 
+        private static void InitializeRepositories()
+        {
+            _accountRepository = new AccountRepository(_connection);
+            _documentRepository = new DocumentRepository(_connection);
+            _userRepository = new UserRepository(_connection);
+            _oauthUserRepository = new OAuthUserRepository(_connection);
+        }
         static IEnumerable<DateTime> RandomDay()
         {
             int range = (DateTime.Today - _start).Days;

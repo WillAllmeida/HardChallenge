@@ -11,28 +11,33 @@ namespace SmartVault.BusinessLogic.Repositories
 {
     public class DocumentRepository : IDocumentRepository
     {
-        public IEnumerable<string> GetDocumentPathListByAccountId(SQLiteConnection connection, string accountId)
+        private readonly SQLiteConnection _connection;
+
+        public DocumentRepository(SQLiteConnection connection)
         {
-            var result = connection.Query<Document>($"SELECT * FROM Document WHERE AccountID = {accountId};").Select(d => d.FilePath);
+            _connection = connection;
+        }
+
+        public IEnumerable<string> GetDocumentPathListByAccountId(string accountId)
+        {
+            var result = _connection.Query<Document>($"SELECT * FROM Document WHERE AccountID = {accountId};").Select(d => d.FilePath);
 
             return result;
         }
 
-        public IEnumerable<string> GetDocumentPathList(SQLiteConnection connection)
+        public IEnumerable<string> GetDocumentPathList()
         {
-            var result = connection.Query<string>($"SELECT FilePath FROM Document;");
-
-            return result;
+            return _connection.Query<string>($"SELECT FilePath FROM Document;"); ;
         }
 
-        public void InsertDocument(SQLiteConnection connection, SQLiteTransaction? transaction, int accountId, int documentCount, IFileInfo documentInfo, string currentDate)
+        public void InsertDocument(SQLiteTransaction? transaction, int accountId, int documentCount, IFileInfo documentInfo, string currentDate)
         {
-            connection.Execute($"INSERT INTO Document (Name, FilePath, Length, AccountId, CreatedDate) VALUES('Document{accountId}-{documentCount}.txt','{documentInfo.FullName}','{documentInfo.Length}','{accountId}', '{currentDate}')", transaction: transaction);
+            _connection.Execute($"INSERT INTO Document (Name, FilePath, Length, AccountId, CreatedDate) VALUES('Document{accountId}-{documentCount}.txt','{documentInfo.FullName}','{documentInfo.Length}','{accountId}', '{currentDate}')", transaction: transaction);
         }
 
-        public int GetDocumentCount(SQLiteConnection connection)
+        public int GetDocumentCount()
         {
-            return connection.QueryFirst<int>("SELECT COUNT(*) FROM Document;");
+            return _connection.QueryFirst<int>("SELECT COUNT(*) FROM Document;");
         }
     }
 }

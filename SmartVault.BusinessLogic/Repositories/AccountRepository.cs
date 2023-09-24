@@ -6,14 +6,21 @@ namespace SmartVault.BusinessLogic.Repositories
 {
     public class AccountRepository : IAccountRepository
     {
-        public void InsertAccount(SQLiteConnection connection, SQLiteTransaction? transaction, int i, string currentDate)
+        private readonly SQLiteConnection _connection;
+
+        public AccountRepository(SQLiteConnection connection)
         {
-            connection.Execute($"INSERT INTO Account (Id, Name, CreatedDate) VALUES('{i}','Account{i}', '{currentDate}')", transaction: transaction);
+            _connection = connection;
         }
 
-        public int GetAccountCount(SQLiteConnection connection)
+        public void InsertAccount(SQLiteTransaction? transaction, int i, string currentDate)
         {
-            return connection.QueryFirst<int>("SELECT COUNT(*) FROM Account;");
+            _connection.Execute($"INSERT INTO Account (Id, Name, CreatedDate) VALUES('{i}','Account{i}', '{currentDate}')", transaction: transaction);
+        }
+
+        public int GetAccountCount()
+        {
+            return _connection.QueryFirst<int>("SELECT COUNT(*) FROM Account;");
         }
     }
 }

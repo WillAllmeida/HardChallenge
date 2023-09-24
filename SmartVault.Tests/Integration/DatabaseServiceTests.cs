@@ -1,16 +1,14 @@
 ﻿using Dapper;
-using SmartVault.BusinessLogic;
-using System;
 using System.IO;
 using System.Linq;
 using Xunit;
 
-namespace SmartVault.Tests.Unit
+namespace SmartVault.Tests.Integration
 {
-    public class DatabaseHelperTests : DataFixture, IClassFixture<DatabaseFixture>
+    public class DatabaseServiceTests : DataFixture, IClassFixture<DatabaseFixture>
     {
         DatabaseFixture _dbFixture;
-        public DatabaseHelperTests(DatabaseFixture dbFixture)
+        public DatabaseServiceTests(DatabaseFixture dbFixture)
         {
             _dbFixture = dbFixture;
         }
@@ -23,7 +21,7 @@ namespace SmartVault.Tests.Unit
             _dbFixture.DropAllTables();
 
             //Act
-            _dbFixture.databaseHelper.CreateDatabaseTables(_dbFixture.connection, files);
+            _dbFixture.databaseService.CreateDatabaseTables(_dbFixture.connection, files);
 
             //Assert
             var tablesCount = _dbFixture.GetTablesCount();
@@ -40,7 +38,7 @@ namespace SmartVault.Tests.Unit
             _dbFixture.DropAllTables();
 
             //Act
-            _dbFixture.databaseHelper.CreateDatabaseTables(_dbFixture.connection, new string[0]);
+            _dbFixture.databaseService.CreateDatabaseTables(_dbFixture.connection, new string[0]);
 
             //Assert
             var tablesCount = _dbFixture.GetTablesCount();

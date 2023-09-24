@@ -1,18 +1,9 @@
 ﻿using Dapper;
 using NSubstitute;
-using SmartVault.BusinessLogic;
-using SmartVault.BusinessLogic.BusinessObjects;
 using SmartVault.BusinessLogic.Interfaces;
 using SmartVault.BusinessLogic.Repositories;
 using System;
-using System.Collections.Generic;
-using System.Data.Common;
-using System.IO;
-using System.IO.Abstractions;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Transactions;
 using Xunit;
 
 namespace SmartVault.Tests.Unit
@@ -21,11 +12,10 @@ namespace SmartVault.Tests.Unit
     {
         DatabaseFixture _dbFixture;
         IDocumentRepository _repository;
-        private readonly IFileInfo _fileInfo = Substitute.For<IFileInfo>();
         public DocumentRepositoryTests(DatabaseFixture dbFixture)
         {
             _dbFixture = dbFixture;
-            _repository = new DocumentRepository();
+            _repository = new DocumentRepository(_dbFixture.connection);
         }
 
         [Fact]
@@ -43,7 +33,7 @@ namespace SmartVault.Tests.Unit
             }
 
             //Act
-            var result = _repository.GetDocumentCount(_dbFixture.connection);
+            var result = _repository.GetDocumentCount();
 
             //Assert
             Assert.Equal(documentsCount, result);
@@ -64,7 +54,7 @@ namespace SmartVault.Tests.Unit
             }
 
             //Act
-            var result = _repository.GetDocumentPathList(_dbFixture.connection);
+            var result = _repository.GetDocumentPathList();
 
             //Assert
             Assert.All(result, i => Assert.IsType<string>(i));
@@ -83,7 +73,7 @@ namespace SmartVault.Tests.Unit
             _dbFixture.connection.Execute($"INSERT INTO Document (Name, FilePath, Length, AccountId, CreatedDate) VALUES('Document2.txt','D://Document2','200','2', '{now}')");
 
             //Act
-            var result = _repository.GetDocumentPathListByAccountId(_dbFixture.connection, "1");
+            var result = _repository.GetDocumentPathListByAccountId("1");
 
 
             //Assert
@@ -100,13 +90,13 @@ namespace SmartVault.Tests.Unit
             var now = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
             int documentsCount = 3;
 
-            _fileInfo.Length.Returns(200);
-            _fileInfo.FullName.Returns("Document");
+            _dbFixture.fileInfo.Length.Returns(200);
+            _dbFixture.fileInfo.FullName.Returns("Document");
 
             //Act
             foreach (int i in Enumerable.Range(0, documentsCount))
             {
-                _repository.InsertDocument(_dbFixture.connection, null, i, i, _fileInfo, now);
+                _repository.InsertDocument(null, i, i, _dbFixture.fileInfo, now);
             }
 
             //Assert

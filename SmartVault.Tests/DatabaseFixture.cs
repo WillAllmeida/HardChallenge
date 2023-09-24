@@ -1,24 +1,29 @@
 ﻿using Dapper;
-using SmartVault.BusinessLogic;
+using NSubstitute;
+using SmartVault.BusinessLogic.Interfaces;
+using SmartVault.BusinessLogic.Services;
 using System;
 using System.Data.SQLite;
 using System.IO;
+using System.IO.Abstractions;
 using System.Linq;
 
 namespace SmartVault.Tests
 {
     public class DatabaseFixture : DataFixture, IDisposable
     {
-        public DatabaseHelper databaseHelper { get; set; }
+        public IDatabaseService databaseService { get; set; }
         public SQLiteConnection connection { get; set; }
+        public IFileInfo fileInfo;
 
         public DatabaseFixture()
         {
             connection = new SQLiteConnection("Data Source=:memory:");
-            databaseHelper = new DatabaseHelper();
+            databaseService = new DatabaseService();
+            fileInfo = Substitute.For<IFileInfo>();
             connection.Open();
             var files = _files.Select(t => _filesDirectory + t).ToArray();
-            databaseHelper.CreateDatabaseTables(connection, files);
+            databaseService.CreateDatabaseTables(connection, files);
         }
 
         public void DropAllTables()
@@ -42,6 +47,11 @@ namespace SmartVault.Tests
         public void CleanUserTableEntries()
         {
             connection.Execute($"delete from User");
+        }
+
+        public void CleanOAuthUserTableEntries()
+        {
+            connection.Execute($"delete from OAuthUser");
         }
 
         public void CleanDocumentTableEntries()

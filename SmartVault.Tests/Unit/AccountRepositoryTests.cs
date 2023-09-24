@@ -2,10 +2,7 @@
 using SmartVault.BusinessLogic.Interfaces;
 using SmartVault.BusinessLogic.Repositories;
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace SmartVault.Tests.Unit
@@ -17,7 +14,7 @@ namespace SmartVault.Tests.Unit
         public AccountRepositoryTests(DatabaseFixture dbFixture)
         {
             _dbFixture = dbFixture;
-            _repository = new AccountRepository();
+            _repository = new AccountRepository(_dbFixture.connection);
         }
 
         [Fact]
@@ -35,7 +32,7 @@ namespace SmartVault.Tests.Unit
             }
 
             //Act
-            var result = _repository.GetAccountCount(_dbFixture.connection);
+            var result = _repository.GetAccountCount();
 
             //Assert
             Assert.Equal(accountsCount, result);
@@ -53,7 +50,7 @@ namespace SmartVault.Tests.Unit
             //Act
             foreach (int i in Enumerable.Range(0, accountsCount))
             {
-                _repository.InsertAccount(_dbFixture.connection, null, i, now);
+                _repository.InsertAccount(null, i, now);
             }
 
             //Assert

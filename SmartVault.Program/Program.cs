@@ -1,78 +1,86 @@
-﻿using SmartVault.BusinessLogic;
-using SmartVault.BusinessLogic.Interfaces;
+﻿using SmartVault.BusinessLogic.Interfaces;
 using SmartVault.BusinessLogic.Repositories;
+using SmartVault.BusinessLogic.Services;
 using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+using System.Collections.Concurrent;
+using System.Data.SQLite;
 using System.Linq;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace SmartVault.Program
 {
     partial class Program
     {
-        static DatabaseHelper _databaseHelper = new DatabaseHelper();
-        static IDocumentRepository _documentRepository = new DocumentRepository();
-        static FileHelper _fileHelper = new FileHelper();
+        static SQLiteConnection _connection = null!;
+        static IDocumentRepository _documentRepository = null!;
+        static IDatabaseService _databaseService = new DatabaseService();
+        static IFileService _fileService = new FileService();
 
         static void Main(string[] args)
         {
             if (args.Length == 0)
             {
-                GetAllFileSizes();
-                WriteEveryThirdFileToFile("3");
                 return;
             }
 
+            WriteEveryThirdFileToFile(args[0]);
+            GetAllFileSizes();
         }
-
         private static void GetAllFileSizes()
         {
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-
             long totalSize = 0;
             int totalFiles = 0;
-            var pathCache = new Dictionary<string, long>();
+            var pathCache = new ConcurrentDictionary<string, long>();
 
-            using (var connection = _databaseHelper.GetDatabaseConnection())
+            using (_connection = _databaseService.GetDatabaseConnection())
             {
-                var queryResult = _documentRepository.GetDocumentPathList(connection);
+                InitializeRepositories();
+                var queryResult = _documentRepository.GetDocumentPathList();
 
-                foreach (var path in queryResult)
+                Parallel.ForEach(queryResult, path =>
                 {
-                    totalFiles += 1;
+                    Interlocked.Increment(ref totalFiles);
+
                     if (pathCache.TryGetValue(path, out long currentSize))
                     {
-                        totalSize += currentSize;
+                        Interlocked.Add(ref totalSize, currentSize);
                     }
                     else
                     {
-                        long size = _fileHelper.GetFileSize(path);
+                        long size = _fileService.GetFileSize(path);
                         pathCache[path] = size;
-                        totalSize += size;
+                        Interlocked.Add(ref totalSize, size);
                     }
-                }
+                });
             }
 
             Console.WriteLine($"Total Size of {totalFiles} files: " + totalSize);
         }
 
-        private static void WriteEveryThirdFileToFile(string accountId, string outputFile = "result.txt")
+        private static void WriteEveryThirdFileToFile(string accountId, string outputFile = "result.txt", string textToSearch = "Smith Property")
         {
             var sb = new StringBuilder();
-            using (var connection = _databaseHelper.GetDatabaseConnection())
+            using (_connection = _databaseService.GetDatabaseConnection())
             {
-                var queryResult = _documentRepository.GetDocumentPathListByAccountId(connection, accountId);
+                InitializeRepositories();
+
+                var queryResult = _documentRepository.GetDocumentPathListByAccountId(accountId);
 
                 for (int i = 0; i < queryResult?.Count() / 3; i = i + 3)
                 {
-                    sb.Append(_fileHelper.CheckStringInFile(queryResult?.ElementAt(i), "Smith Property"));
+                    sb.Append(_fileService.CheckStringInFile(queryResult?.ElementAt(i), textToSearch));
                 }
 
-                _fileHelper.CreateFile(outputFile, sb.ToString());
+                _fileService.CreateFile(outputFile, sb.ToString());
                 Console.WriteLine($"The new file {outputFile} has been created");
             }
+        }
+
+        private static void InitializeRepositories()
+        {
+            _documentRepository = new DocumentRepository(_connection);
         }
     }
 }
