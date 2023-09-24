@@ -2,7 +2,6 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.Text;
 using SmartVault.CodeGeneration;
-using System;
 using System.Collections.Immutable;
 using System.Diagnostics;
 using System.IO;

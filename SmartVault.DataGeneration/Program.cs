@@ -1,6 +1,6 @@
-﻿using Dapper;
-using Newtonsoft.Json;
-using SmartVault.BusinessLogic;
+﻿using SmartVault.BusinessLogic;
+using SmartVault.BusinessLogic.Interfaces;
+using SmartVault.BusinessLogic.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -17,6 +17,9 @@ namespace SmartVault.DataGeneration
         static DatabaseHelper _databaseHelper = new DatabaseHelper();
         static FileHelper _fileHelper = new FileHelper();
         static string _fileName = "TestDoc.txt";
+        static IDocumentRepository _documentRepository = new DocumentRepository();
+        static IAccountRepository _accountRepository = new AccountRepository();
+        static IUserRepository _userRepository = new UserRepository();
 
         static void Main(string[] args)
         {
@@ -44,14 +47,14 @@ namespace SmartVault.DataGeneration
                     {
                         var randomDayIterator = RandomDay().GetEnumerator();
                         randomDayIterator.MoveNext();
-
                         string currentDate = DateTime.Now.ToString("yyyy-MM-dd HH:mm");
-                        connection.Execute($"INSERT INTO User (Id, FirstName, LastName, DateOfBirth, AccountId, Username, Password, CreatedDate) VALUES('{i}','FName{i}','LName{i}','{randomDayIterator.Current.ToString("yyyy-MM-dd")}','{i}','UserName-{i}','e10adc3949ba59abbe56e057f20f883e', '{currentDate}')", transaction: transaction);
-                        connection.Execute($"INSERT INTO Account (Id, Name, CreatedDate) VALUES('{i}','Account{i}', '{currentDate}')", transaction: transaction);
+
+                        _userRepository.InsertUser(connection, transaction, i, randomDayIterator.Current.ToString("yyyy-MM-dd"), currentDate);
+                        _accountRepository.InsertAccount(connection, transaction, i, currentDate);
+
                         for (int d = 0; d < 10000; d++)
                         {
-                            var documentInfo = _fileHelper.GetFileInfo(_fileName);
-                            connection.Execute($"INSERT INTO Document (Name, FilePath, Length, AccountId, CreatedDate) VALUES('Document{i}-{d}.txt','{documentInfo.FullName}','{documentInfo.Length}','{i}', '{currentDate}')", transaction: transaction);
+                            _documentRepository.InsertDocument(connection, transaction, i, d, _fileHelper.GetFileInfo(_fileName), currentDate);
 
                         }
                     });
@@ -64,12 +67,10 @@ namespace SmartVault.DataGeneration
                     ts.Hours, ts.Minutes, ts.Seconds,
                     ts.Milliseconds / 10);
                 Console.WriteLine("RunTime " + elapsedTime);
-                var accountData = connection.Query("SELECT COUNT(*) FROM Account;");
-                Console.WriteLine($"AccountCount: {JsonConvert.SerializeObject(accountData)}");
-                var documentData = connection.Query("SELECT COUNT(*) FROM Document;");
-                Console.WriteLine($"DocumentCount: {JsonConvert.SerializeObject(documentData)}");
-                var userData = connection.Query("SELECT COUNT(*) FROM User;");
-                Console.WriteLine($"UserCount: {JsonConvert.SerializeObject(userData)}");
+
+                Console.WriteLine($"AccountCount: {_accountRepository.GetAccountCount(connection)}");
+                Console.WriteLine($"DocumentCount: {_documentRepository.GetDocumentCount(connection)}");
+                Console.WriteLine($"UserCount: {_userRepository.GetUserCount(connection)}");
             }
         }
 

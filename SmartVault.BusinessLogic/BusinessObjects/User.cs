@@ -1,4 +1,4 @@
-﻿namespace SmartVault.Program.BusinessObjects
+﻿namespace SmartVault.BusinessLogic.BusinessObjects
 {
     public partial class User
     {

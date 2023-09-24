@@ -11,7 +11,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartVault.DataGeneration",
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartVault.BusinessLogic", "SmartVault.BusinessLogic\SmartVault.BusinessLogic.csproj", "{3CEABF24-EFC1-410A-9439-D5CE0676F923}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SmartVault.Tests", "SmartVault.Tests\SmartVault.Tests.csproj", "{BC2C3488-BBA7-4D9D-BE3C-833C2C1C3DAB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SmartVault.Tests", "SmartVault.Tests\SmartVault.Tests.csproj", "{BC2C3488-BBA7-4D9D-BE3C-833C2C1C3DAB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

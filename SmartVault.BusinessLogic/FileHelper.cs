@@ -1,10 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.IO;
 using System.IO.Abstractions;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace SmartVault.BusinessLogic
 {
@@ -20,12 +16,13 @@ namespace SmartVault.BusinessLogic
         {
             _fileSystem = fileSystem;
         }
+
         public void CreateFile(string fileName, string content)
         {
             _fileSystem.File.WriteAllText(_directory + fileName, content);
         }
 
-        public IFileInfo GetFilePath(string fileName)
+        public IFileInfo GetFileInfo(string fileName)
         {
             return _fileSystem.FileInfo.New(_directory + fileName);
         }
@@ -46,13 +43,19 @@ namespace SmartVault.BusinessLogic
 
         public long GetFileSize(string path)
         {
-            var fileSize = _fileSystem.FileInfo.New(path).Length;
-            return fileSize;
+            if (_fileSystem.File.Exists(path))
+            {
+                return _fileSystem.FileInfo.New(path).Length;
+            }
+            else
+            {
+                return 0;
+            }
         }
 
         public bool VerifyIfFileExists(string fileName)
         {
-            return File.Exists(_directory + fileName);
+            return _fileSystem.File.Exists(_directory + fileName);
         }
     }
 }

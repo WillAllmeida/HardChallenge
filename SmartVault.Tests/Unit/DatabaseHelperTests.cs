@@ -19,14 +19,14 @@ namespace SmartVault.Tests.Unit
         public void CreateDatabaseTablesShouldCreateOneTableForEachFile()
         {
             //Arrange
-            var databaseHelper = new DatabaseHelper();
             var files = _files.Select(t => _filesDirectory + t).ToArray();
+            _dbFixture.DropAllTables();
 
             //Act
-            databaseHelper.CreateDatabaseTables(_dbFixture.connection, files);
+            _dbFixture.databaseHelper.CreateDatabaseTables(_dbFixture.connection, files);
 
             //Assert
-            var tablesCount = _dbFixture.connection.QueryFirst<int>("SELECT count(*) FROM sqlite_master WHERE type = 'table'");
+            var tablesCount = _dbFixture.GetTablesCount();
             var everyTableExists = _files.Select(f => _dbFixture.connection.QueryFirst<string>($"SELECT name FROM sqlite_master WHERE type='table' AND name='{Path.GetFileNameWithoutExtension(f)}';") == Path.GetFileNameWithoutExtension(f));
 
             Assert.Equal(_files.Length, tablesCount);
@@ -37,13 +37,13 @@ namespace SmartVault.Tests.Unit
         public void CreateDatabaseTablesShouldNotCreateTablesWhenNoFilesProvided()
         {
             //Arrange
-            var databaseHelper = new DatabaseHelper();
+            _dbFixture.DropAllTables();
 
             //Act
-            databaseHelper.CreateDatabaseTables(_dbFixture.connection, new string[0]);
+            _dbFixture.databaseHelper.CreateDatabaseTables(_dbFixture.connection, new string[0]);
 
             //Assert
-            var tablesCount = _dbFixture.connection.QueryFirst<int>("SELECT count(*) FROM sqlite_master WHERE type = 'table'");
+            var tablesCount = _dbFixture.GetTablesCount();
             Assert.Equal(0, tablesCount);
         }
     }

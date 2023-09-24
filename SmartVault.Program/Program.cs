@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json;
-using SmartVault.BusinessLogic;
-using SmartVault.Program.BusinessObjects;
+﻿using SmartVault.BusinessLogic;
+using SmartVault.BusinessLogic.Interfaces;
+using SmartVault.BusinessLogic.Repositories;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -12,6 +12,7 @@ namespace SmartVault.Program
     partial class Program
     {
         static DatabaseHelper _databaseHelper = new DatabaseHelper();
+        static IDocumentRepository _documentRepository = new DocumentRepository();
         static FileHelper _fileHelper = new FileHelper();
 
         static void Main(string[] args)
@@ -19,7 +20,7 @@ namespace SmartVault.Program
             if (args.Length == 0)
             {
                 GetAllFileSizes();
-                WriteEveryThirdFileToFile("");
+                WriteEveryThirdFileToFile("3");
                 return;
             }
 
@@ -31,13 +32,16 @@ namespace SmartVault.Program
             stopWatch.Start();
 
             long totalSize = 0;
+            int totalFiles = 0;
             var pathCache = new Dictionary<string, long>();
 
             using (var connection = _databaseHelper.GetDatabaseConnection())
             {
-                var queryResult = _databaseHelper.GetDocumentPathList(connection);
+                var queryResult = _documentRepository.GetDocumentPathList(connection);
+
                 foreach (var path in queryResult)
                 {
+                    totalFiles += 1;
                     if (pathCache.TryGetValue(path, out long currentSize))
                     {
                         totalSize += currentSize;
@@ -51,23 +55,23 @@ namespace SmartVault.Program
                 }
             }
 
-            Console.WriteLine("Total Size: " + totalSize);
+            Console.WriteLine($"Total Size of {totalFiles} files: " + totalSize);
         }
 
-        private static void WriteEveryThirdFileToFile(string accountId)
+        private static void WriteEveryThirdFileToFile(string accountId, string outputFile = "result.txt")
         {
             var sb = new StringBuilder();
             using (var connection = _databaseHelper.GetDatabaseConnection())
             {
-                var queryResult = _databaseHelper.GetDocumentListByAccountId(connection, "3");
-                var documents = JsonConvert.DeserializeObject<IEnumerable<Document>>(queryResult);
-                for (int i = 0; i < documents?.Count() / 3; i = i + 3)
+                var queryResult = _documentRepository.GetDocumentPathListByAccountId(connection, accountId);
+
+                for (int i = 0; i < queryResult?.Count() / 3; i = i + 3)
                 {
-                    sb.Append(_fileHelper.CheckStringInFile(documents?.ElementAt(i).FilePath, "Smith Property"));
+                    sb.Append(_fileHelper.CheckStringInFile(queryResult?.ElementAt(i), "Smith Property"));
                 }
 
-                _fileHelper.CreateFile("result.txt", sb.ToString());
-                Console.WriteLine("The new file has been created");
+                _fileHelper.CreateFile(outputFile, sb.ToString());
+                Console.WriteLine($"The new file {outputFile} has been created");
             }
         }
     }

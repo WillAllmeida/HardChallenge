@@ -1,6 +1,4 @@
 ﻿using NSubstitute;
-using System;
-using System.IO;
 using System.IO.Abstractions;
 using Xunit;
 using FileHelper = SmartVault.BusinessLogic.FileHelper;
