@@ -7,6 +7,7 @@ using System.Configuration;
 using System.Data.Entity;
 using System.Data.SQLite;
 using System.IO;
+using System.Linq;
 using System.Reflection.Metadata;
 
 namespace SmartVault.BusinessLogic
@@ -23,7 +24,7 @@ namespace SmartVault.BusinessLogic
             return new SQLiteConnection(string.Format(_configuration?["ConnectionStrings:DefaultConnection"] ?? "", _directory + _configuration["DatabaseFileName"]));
         }
 
-        public void CreateDatabase()
+        public void CreateDatabaseFile()
         {
             SQLiteConnection.CreateFile(_configuration["DatabaseFileName"]);
         }
@@ -33,6 +34,18 @@ namespace SmartVault.BusinessLogic
             var result = connection.Query($"SELECT * FROM Document WHERE AccountID = {accountId};");
 
             return JsonConvert.SerializeObject(result);
+        }
+
+        public IEnumerable<dynamic> GetDocumentPathList(SQLiteConnection connection)
+        {
+            var result = connection.Query($"SELECT FilePath FROM Document;");
+
+            return result.Select(i => i.FilePath).AsEnumerable();
+        }
+
+        public string GetDatabaseName()
+        {
+            return _configuration["DatabaseFileName"];
         }
     }
 }
