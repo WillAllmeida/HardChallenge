@@ -1,19 +1,12 @@
 ﻿using Dapper;
-using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using SmartVault.BusinessLogic;
-using SmartVault.Library;
 using System;
 using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Data.SQLite;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
-using System.Xml.Serialization;
 
 namespace SmartVault.DataGeneration
 {
@@ -27,27 +20,23 @@ namespace SmartVault.DataGeneration
 
         static void Main(string[] args)
         {
+            if (_fileHelper.VerifyIfFileExists(_databaseHelper.GetDatabaseName()))
+            {
+                Console.WriteLine("The database already exists.");
+                return;
+            }
+
             _databaseHelper.CreateDatabaseFile();
             _fileHelper.CreateFile(_fileName, $"This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}This is my test document{Environment.NewLine}");
 
             using (var connection = _databaseHelper.GetDatabaseConnection())
             {
-                if (_fileHelper.VerifyIfFileExists(_databaseHelper.GetDatabaseName()))
-                {
-                    Console.WriteLine("The database already exists.");
-                    return;
-                }
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
                 connection.Open();
                 var files = Directory.GetFiles(@"..\..\..\..\BusinessObjectSchema");
-                for (int i = 0; i < files.Length; i++)
-                {
-                    var serializer = new XmlSerializer(typeof(BusinessObject));
-                    var businessObject = serializer.Deserialize(new StreamReader(files[i])) as BusinessObject;
-                    connection.Execute(businessObject?.Script);
 
-                }
+                _databaseHelper.CreateDatabaseTables(connection, files);
 
                 using (var transaction = connection.BeginTransaction())
                 {
@@ -61,7 +50,7 @@ namespace SmartVault.DataGeneration
                         connection.Execute($"INSERT INTO Account (Id, Name, CreatedDate) VALUES('{i}','Account{i}', '{currentDate}')", transaction: transaction);
                         for (int d = 0; d < 10000; d++)
                         {
-                            var documentInfo = _fileHelper.GetFilePath(_fileName);
+                            var documentInfo = _fileHelper.GetFileInfo(_fileName);
                             connection.Execute($"INSERT INTO Document (Name, FilePath, Length, AccountId, CreatedDate) VALUES('Document{i}-{d}.txt','{documentInfo.FullName}','{documentInfo.Length}','{i}', '{currentDate}')", transaction: transaction);
 
                         }

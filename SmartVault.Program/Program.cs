@@ -1,13 +1,9 @@
-﻿using Dapper;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using SmartVault.BusinessLogic;
 using SmartVault.Program.BusinessObjects;
 using System;
 using System.Collections.Generic;
-using System.Data.Entity;
-using System.Data.SQLite;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text;
 
